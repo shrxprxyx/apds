@@ -1,0 +1,72 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: apds
+
+scrape_configs:
+  # ─── Prometheus itself ────────────────────────────────────
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # ─── API Gateway ─────────────────────────────────────────
+  - job_name: api-gateway
+    static_configs:
+      - targets: ["api-gateway:8000"]
+    metrics_path: /metrics
+
+  # ─── ML Services ─────────────────────────────────────────
+  - job_name: nlp-service
+    static_configs:
+      - targets: ["nlp-service:8001"]
+    metrics_path: /metrics
+
+  - job_name: url-service
+    static_configs:
+      - targets: ["url-service:8002"]
+    metrics_path: /metrics
+
+  - job_name: visual-service
+    static_configs:
+      - targets: ["visual-service:8003"]
+    metrics_path: /metrics
+
+  - job_name: adversarial-service
+    static_configs:
+      - targets: ["adversarial-service:8004"]
+    metrics_path: /metrics
+
+  - job_name: fusion-service
+    static_configs:
+      - targets: ["fusion-service:8005"]
+    metrics_path: /metrics
+
+  - job_name: intel-service
+    static_configs:
+      - targets: ["intel-service:8006"]
+    metrics_path: /metrics
+
+  - job_name: feedback-service
+    static_configs:
+      - targets: ["feedback-service:8007"]
+    metrics_path: /metrics
+
+  - job_name: training-service
+    static_configs:
+      - targets: ["training-service:8008"]
+    metrics_path: /metrics
+
+  - job_name: dashboard-api
+    static_configs:
+      - targets: ["dashboard-api:8009"]
+    metrics_path: /metrics
+
+  # ─── Infrastructure ───────────────────────────────────────
+  - job_name: redis
+    static_configs:
+      - targets: ["redis:6379"]
+
+  - job_name: postgres
+    static_configs:
+      - targets: ["postgres:5432"]
