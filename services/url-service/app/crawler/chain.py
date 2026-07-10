@@ -14,7 +14,7 @@ class ChainNode:
 @dataclass  
 class RedirectChain:
     nodes: list[ChainNode] = field(default_factory=list)
-    edges: list[tuple[int, int]] = field(default_factory=list)  # (from_idx, to_idx)
+    edges: list[tuple[int, int]] = field(default_factory=list)  
     error: str | None = None
 
 async def crawl_chain(url: str, max_hops: int = 10) -> RedirectChain:
@@ -22,10 +22,10 @@ async def crawl_chain(url: str, max_hops: int = 10) -> RedirectChain:
     current_url = url
 
     async with httpx.AsyncClient(
-        follow_redirects=False,   # manual redirect — we want each hop
+        follow_redirects=False,   # manual redirect, we want each hop
         timeout=5.0,
         headers={"User-Agent": "Mozilla/5.0 (compatible; APDS-crawler/1.0)"},
-        verify=False              # phishing sites often have bad certs
+        verify=False              
     ) as client:
         for hop in range(max_hops):
             try:
