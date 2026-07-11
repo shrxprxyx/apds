@@ -1,12 +1,41 @@
-.env
-.env.*
-*.env
+# python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
-.DS_Store
-node_modules/
-dist/
+.Python
 *.egg-info/
-.venv/
+
+# virtual environment
 venv/
+.venv/
+env/
+
+# environment variables — NEVER push this
+.env
+
+# trained model weights — too large for git
+models/
+*.pt
+*.pth
+*.onnx
+
+# training data — too large, also potentially sensitive
+data/raw/
+data/processed/
+
+# logs
+*.log
+logs/
+
+# os
+.DS_Store
+Thumbs.db
+
+# ide
+.vscode/
+.idea/
+
+# pytest / coverage
+.pytest_cache/
+htmlcov/
+.coverage
