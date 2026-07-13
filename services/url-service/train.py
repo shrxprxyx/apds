@@ -9,19 +9,19 @@ import torch.nn.functional as F
 
 from app.crawler.chain import crawl_chain
 from app.features.extractor import extract_features
-from app.gnn.graphsage import GraphSAGEClassifier, FEATURE_DIM  # add FEATURE_DIM to graphsage.py
+from app.gnn.graphsage import GraphSAGEClassifier, FEATURE_DIM
 
 # ── paths ──────────────────────────────────────────────────────────────────
-PHISH_FILE   = Path("data/raw/openphish.txt")
-LEGIT_FILE   = Path("data/raw/tranco.csv")
-SAVE_PATH    = Path("models/graphsage.pt")
+PHISH_FILE = Path("data/raw/openphish.txt")
+LEGIT_FILE = Path("data/raw/tranco.csv")
+SAVE_PATH  = Path("models/graphsage.pt")
 SAVE_PATH.parent.mkdir(exist_ok=True)
 
 # ── config ─────────────────────────────────────────────────────────────────
-MAX_PHISH    = 200   # how many phishing URLs to crawl
-MAX_LEGIT    = 200   # how many legit domains to crawl
-EPOCHS       = 30
-LR           = 0.01
+MAX_PHISH = 200
+MAX_LEGIT = 200
+EPOCHS    = 50
+LR        = 0.01
 
 # ───────────────────────────────────────────────────────────────────────────
 
@@ -51,7 +51,6 @@ def load_legit_urls(n: int) -> list[str]:
     return domains
 
 async def url_to_graph(url: str, label: int) -> Data | None:
-    """Crawl one URL and turn its redirect chain into a PyG Data object."""
     try:
         chain = await crawl_chain(url)
         if not chain.nodes:
@@ -68,10 +67,9 @@ async def url_to_graph(url: str, label: int) -> Data | None:
                 chain.edges, dtype=torch.long
             ).t().contiguous()
         else:
-            # single node — no edges
             edge_index = torch.zeros((2, 0), dtype=torch.long)
 
-        y = torch.tensor([label], dtype=torch.float)
+        y = torch.tensor(float(label), dtype=torch.float)
         return Data(x=x, edge_index=edge_index, y=y)
 
     except Exception as e:
@@ -87,7 +85,7 @@ async def build_dataset(phish_urls: list, legit_urls: list) -> list[Data]:
         graph = await url_to_graph(url, label=1)
         if graph:
             dataset.append(graph)
-        await asyncio.sleep(0.1)  # be polite, don't hammer servers
+        await asyncio.sleep(0.1)
 
     print(f"\n[2/2] crawling legit domains...")
     for i, url in enumerate(legit_urls):
@@ -104,14 +102,11 @@ async def build_dataset(phish_urls: list, legit_urls: list) -> list[Data]:
     return dataset
 
 def train(dataset: list[Data]):
-    from app.gnn.graphsage import FEATURE_DIM
-    
-    # split 80/20
-    split = int(0.8 * len(dataset))
+    split     = int(0.8 * len(dataset))
     train_set = dataset[:split]
     val_set   = dataset[split:]
 
-    model = GraphSAGEClassifier(in_channels=FEATURE_DIM)
+    model     = GraphSAGEClassifier(in_channels=FEATURE_DIM)
     optimizer = Adam(model.parameters(), lr=LR)
 
     print(f"\ntraining on {len(train_set)} graphs, validating on {len(val_set)}...")
@@ -122,8 +117,8 @@ def train(dataset: list[Data]):
         total_loss = 0
         for data in train_set:
             optimizer.zero_grad()
-            out = model(data.x, data.edge_index)
-            loss = F.binary_cross_entropy(out, data.y.unsqueeze(0))
+            out  = model(data.x, data.edge_index)
+            loss = F.binary_cross_entropy(out.squeeze(), data.y)
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
@@ -138,23 +133,21 @@ def train(dataset: list[Data]):
                 if pred == int(data.y.item()):
                     correct += 1
 
-        acc = correct / len(val_set) if val_set else 0
+        acc     = correct / len(val_set) if val_set else 0
         avg_loss = total_loss / len(train_set)
 
         if epoch % 5 == 0 or epoch == 1:
             print(f"  epoch {epoch:02d}/{EPOCHS} | loss: {avg_loss:.4f} | val acc: {acc:.2%}")
 
-    # ── save ──
     torch.save(model.state_dict(), SAVE_PATH)
     print(f"\nmodel saved to {SAVE_PATH}")
-    return model
 
 async def main():
     print("=== APDS GNN Training ===\n")
 
     print("loading URLs...")
-    phish = load_phishing_urls(MAX_PHISH)
-    legit  = load_legit_urls(MAX_LEGIT)
+    phish   = load_phishing_urls(MAX_PHISH)
+    legit   = load_legit_urls(MAX_LEGIT)
 
     dataset = await build_dataset(phish, legit)
 

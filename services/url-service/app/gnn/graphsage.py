@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch_geometric.nn import SAGEConv
 
-FEATURE_DIM = 9  # ← add this
+FEATURE_DIM = 9
 
 class GraphSAGEClassifier(torch.nn.Module):
     def __init__(self, in_channels: int, hidden: int = 64, out_channels: int = 1):
@@ -16,4 +16,4 @@ class GraphSAGEClassifier(torch.nn.Module):
         x = F.dropout(x, p=0.3, training=self.training)
         x = F.relu(self.conv2(x, edge_index))
         x = x.mean(dim=0, keepdim=True)
-        return torch.sigmoid(self.classifier(x))
+        return torch.sigmoid(self.classifier(x)).squeeze()
