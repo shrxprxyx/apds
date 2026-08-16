@@ -11,13 +11,11 @@ from app.crawler.chain import crawl_chain
 from app.features.extractor import extract_features
 from app.gnn.graphsage import GraphSAGEClassifier, FEATURE_DIM
 
-# ── paths ──────────────────────────────────────────────────────────────────
 PHISH_FILE = Path("data/raw/openphish.txt")
 LEGIT_FILE = Path("data/raw/tranco.csv")
 SAVE_PATH  = Path("models/graphsage.pt")
 SAVE_PATH.parent.mkdir(exist_ok=True)
 
-# ── config ─────────────────────────────────────────────────────────────────
 MAX_PHISH = 200
 MAX_LEGIT = 200
 EPOCHS    = 50
@@ -61,6 +59,11 @@ async def url_to_graph(url: str, label: int) -> Data | None:
             for n in chain.nodes
         ]
         x = torch.tensor(features, dtype=torch.float)
+        import numpy as np
+        arr = np.array(features)
+        print(f"    features min={arr.min():.2f} max={arr.max():.2f} shape={arr.shape}")
+        
+        x = torch.tensor(features, dtype=torch.float)
 
         if chain.edges:
             edge_index = torch.tensor(
@@ -69,7 +72,7 @@ async def url_to_graph(url: str, label: int) -> Data | None:
         else:
             edge_index = torch.zeros((2, 0), dtype=torch.long)
 
-        y = torch.tensor(float(label), dtype=torch.float)
+        y = torch.tensor([float(label)], dtype=torch.float)
         return Data(x=x, edge_index=edge_index, y=y)
 
     except Exception as e:
@@ -118,7 +121,9 @@ def train(dataset: list[Data]):
         for data in train_set:
             optimizer.zero_grad()
             out  = model(data.x, data.edge_index)
-            loss = F.binary_cross_entropy(out.squeeze(), data.y)
+            loss = F.binary_cross_entropy(out, data.y)
+            if epoch == 1 and total_loss == 0:
+                print(f"  DEBUG out shape: {out.shape}, y shape: {data.y.shape}, loss: {loss.item():.4f}")
             loss.backward()
             optimizer.step()
             total_loss += loss.item()

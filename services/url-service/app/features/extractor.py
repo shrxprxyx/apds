@@ -43,18 +43,39 @@ def domain_age_days(domain: str) -> float:
     return -1.0
 
 def extract_features(domain: str, hop_index: int, chain_length: int) -> list[float]:
-    """Returns a fixed-length feature vector for one node."""
     name = tldextract.extract(domain).domain
-    return [
-        float(len(domain)),             # domain length
-        float(domain.count(".")),       # subdomain depth
-        float(sum(c.isdigit() for c in domain)) / max(len(domain), 1),  # digit ratio
-        domain_entropy(name),           # randomness
-        typosquat_score(domain),        # brand similarity
-        tld_risk(domain),               # risky TLD flag
-        float(hop_index),               # position in chain
-        float(chain_length),            # total chain length
-        domain_age_days(domain),        # WHOIS age
-    ]
+    
+    # raw values
+    domain_len    = len(domain)
+    dot_count     = domain.count(".")
+    digit_ratio   = sum(c.isdigit() for c in domain) / max(len(domain), 1)
+    entropy       = domain_entropy(name)
+    typosquat     = typosquat_score(domain)
+    tld_risk_val  = tld_risk(domain)
+    age_days      = domain_age_days(domain)
 
+    # normalise each feature into roughly [0, 1]
+    domain_len_norm  = min(domain_len / 100.0, 1.0)       # cap at 100 chars
+    dot_count_norm   = min(dot_count / 5.0, 1.0)          # cap at 5 dots
+    hop_norm         = min(hop_index / 10.0, 1.0)         # cap at 10 hops
+    chain_norm       = min(chain_length / 10.0, 1.0)      # cap at 10 hops
+    
+    # age: -1 (unknown) → 0.5 (uncertain), 0 days → 1.0 (very suspicious), 3650+ days → 0.0 (very old = safe)
+    if age_days < 0:
+        age_norm = 0.5
+    else:
+        age_norm = max(0.0, 1.0 - (age_days / 3650.0))   # 10 years = fully safe
+
+    return [
+        domain_len_norm,   # 0-1
+        dot_count_norm,    # 0-1
+        digit_ratio,       # already 0-1
+        min(entropy / 5.0, 1.0),  # entropy max ~5 bits for short strings
+        typosquat,         # already 0-1
+        tld_risk_val,      # already 0 or 1
+        hop_norm,          # 0-1
+        chain_norm,        # 0-1
+        age_norm,          # 0-1
+    ]
+    
 FEATURE_DIM = 9  # must match the list above

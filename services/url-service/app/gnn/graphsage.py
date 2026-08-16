@@ -10,10 +10,10 @@ class GraphSAGEClassifier(torch.nn.Module):
         self.conv1 = SAGEConv(in_channels, hidden)
         self.conv2 = SAGEConv(hidden, hidden // 2)
         self.classifier = torch.nn.Linear(hidden // 2, out_channels)
-
     def forward(self, x, edge_index):
         x = F.relu(self.conv1(x, edge_index))
         x = F.dropout(x, p=0.3, training=self.training)
         x = F.relu(self.conv2(x, edge_index))
         x = x.mean(dim=0, keepdim=True)
-        return torch.sigmoid(self.classifier(x)).squeeze()
+        out = self.classifier(x)
+        return torch.sigmoid(out).view(1)    # always shape (1,)
