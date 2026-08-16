@@ -1,6 +1,5 @@
 """
 NLP Service — DistilBERT Fine-tuning Script
-Doc 4.1.1: Fine-tune distilbert-base-uncased on phishing email datasets
 
 Data expected at:
   data/raw/prepared/phishing/     ← phishing emails (label=1)
@@ -10,9 +9,7 @@ Run: python train.py
 Output: models/phishing_distilbert/
 """
 
-import os
 import json
-import glob
 import argparse
 from pathlib import Path
 
@@ -34,14 +31,14 @@ from sklearn.model_selection import train_test_split
 
 from app.preprocessor.clean import clean
 
-# ─── Paths ────────────────────────────────────────────────────
+#Paths
 DATA_DIR = Path("data/raw/prepared")
 MODEL_OUT = Path("models/phishing_distilbert")
 MODEL_NAME = "distilbert-base-uncased"
-MAX_LENGTH = 512           # doc 4.1.1: truncated to 512 tokens
+MAX_LENGTH = 512           
 
 
-# ─── Dataset ──────────────────────────────────────────────────
+#Dataset
 class PhishingDataset(Dataset):
     def __init__(self, encodings, labels):
         self.encodings = encodings
@@ -56,7 +53,7 @@ class PhishingDataset(Dataset):
         return item
 
 
-# ─── Load Data ────────────────────────────────────────────────
+#Load Data
 def load_data(data_dir: Path):
     texts, labels = [], []
 
@@ -88,7 +85,7 @@ def load_data(data_dir: Path):
     return texts, labels
 
 
-# ─── Metrics ──────────────────────────────────────────────────
+#Metrics
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
     preds = np.argmax(logits, axis=-1)
@@ -112,7 +109,7 @@ def compute_metrics(eval_pred):
     }
 
 
-# ─── Main ─────────────────────────────────────────────────────
+#Main
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=3)
@@ -174,7 +171,6 @@ def main():
         compute_metrics=compute_metrics,
     )
 
-    print("Training...")
     trainer.train()
 
     metrics = trainer.evaluate()
