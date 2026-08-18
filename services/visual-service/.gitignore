@@ -1,0 +1,5 @@
+data/brand_screenshots/
+models/
+*.png
+*.faiss
+*.json
