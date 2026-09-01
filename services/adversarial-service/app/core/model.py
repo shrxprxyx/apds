@@ -12,7 +12,7 @@ model = None
 device = "cpu"
 
 
-# ─── Load RoBERTa (doc 4.4) ───────────────────────────────────
+# ─── Load RoBERTa ───────────────────────────────────
 async def load_model():
     """
     Doc 4.4: RoBERTa-base fine-tuned for adversarial phishing detection.
