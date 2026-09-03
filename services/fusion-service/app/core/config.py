@@ -1,5 +1,10 @@
-from pydantic_settings import BaseSettings
+from pathlib import Path
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Dynamically find the root directory of the repository (apds/)
+# config.py -> core -> app -> fusion-service -> apds
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent
+ENV_FILE = BASE_DIR / ".env"
 
 class Settings(BaseSettings):
     # ─── App ──────────────────────────────────────────────────
@@ -24,9 +29,11 @@ class Settings(BaseSettings):
     THRESHOLD_BLOCK: float = 0.85
     THRESHOLD_WARN: float = 0.55
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=str(ENV_FILE),
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
 
 settings = Settings()
