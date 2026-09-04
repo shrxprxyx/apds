@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     PHISHTANK_API_KEY: str = ""
     OPENPHISH_FEED_URL: str = "https://openphish.com/feed.txt"
     URLHAUS_API_URL: str = "https://urlhaus-api.abuse.ch/v1"
+    URLHAUS_API_KEY: str = ""
 
     # ─── Polling ─────────────────────────────────────────────────
     FEED_REFRESH_INTERVAL_MINUTES: int = 15
