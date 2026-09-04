@@ -1,6 +1,9 @@
-from pydantic_settings import BaseSettings
+from pathlib import Path
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent
+ENV_FILE = BASE_DIR / ".env"
 class Settings(BaseSettings):
     # ─── App ──────────────────────────────────────────────────
     ENVIRONMENT: str = "development"
@@ -25,9 +28,11 @@ class Settings(BaseSettings):
     FEED_REFRESH_INTERVAL_MINUTES: int = 15
     FEED_FETCH_TIMEOUT_SECONDS: int = 30
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=str(ENV_FILE),
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
 
 settings = Settings()
