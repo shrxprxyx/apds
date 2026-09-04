@@ -1,42 +1,57 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+import json
+import redis.asyncio as aioredis
 import structlog
 
 from app.core.config import settings
 
 logger = structlog.get_logger()
 
-# ─── Engine ───────────────────────────────────────────────────
-# Same Postgres instance api-gateway uses — threat_indicators table
-# already exists in infra/postgres/init.sql, so no migrations needed
-# here. This service only reads/writes rows in a table it doesn't own.
-engine = create_async_engine(
-    settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
-    echo=settings.ENVIRONMENT == "development",
-    pool_size=5,
-    max_overflow=10,
-)
-
-# ─── Session Factory ──────────────────────────────────────────
-AsyncSessionLocal = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+redis_client: aioredis.Redis | None = None
 
 
-class Base(DeclarativeBase):
-    pass
+async def init_redis():
+    global redis_client
+    try:
+        redis_client = aioredis.from_url(
+            settings.REDIS_URL,
+            encoding="utf-8",
+            decode_responses=True,
+        )
+        await redis_client.ping()
+        logger.info("redis connected")
+    except Exception as e:
+        logger.error("redis connection failed", error=str(e))
+        raise
 
 
-# ─── Dependency ───────────────────────────────────────────────
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+async def get_redis() -> aioredis.Redis:
+    return redis_client
+
+
+# ─── Domain Reputation Cache (doc 6.4: APDS:TI:DOMAIN:{domain}) ──
+# url-service checks this before hitting /lookup here over HTTP,
+# and this service itself checks it before hitting Postgres, so a
+# hot domain (e.g. actively-flagged in a fast-moving campaign) never
+# needs a DB round trip more than once per TTL window.
+async def cache_get_indicator(domain: str) -> dict | None:
+    if redis_client is None:
+        return None
+    try:
+        cached = await redis_client.get(f"{settings.TI_CACHE_PREFIX}{domain}")
+        return json.loads(cached) if cached else None
+    except Exception as e:
+        logger.warning("ti cache read failed", domain=domain, error=str(e))
+        return None
+
+
+async def cache_set_indicator(domain: str, data: dict):
+    if redis_client is None:
+        return
+    try:
+        await redis_client.set(
+            f"{settings.TI_CACHE_PREFIX}{domain}",
+            json.dumps(data),
+            ex=settings.TI_CACHE_TTL_SECONDS,
+        )
+    except Exception as e:
+        logger.warning("ti cache write failed", domain=domain, error=str(e))
