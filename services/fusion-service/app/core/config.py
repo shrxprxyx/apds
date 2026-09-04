@@ -1,8 +1,6 @@
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Dynamically find the root directory of the repository (apds/)
-# config.py -> core -> app -> fusion-service -> apds
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent
 ENV_FILE = BASE_DIR / ".env"
 
