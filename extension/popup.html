@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>APDS</title>
+  <style>
+    body {
+      width: 300px; margin: 0; padding: 16px;
+      font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #12141a; color: #fff;
+    }
+    h1 { font-size: 15px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; }
+    .row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #22242e; }
+    .verdict { font-weight: 700; }
+    .ALLOW { color: #3ddc84; }
+    .WARN { color: #E8A945; }
+    .BLOCK { color: #E84545; }
+    .UNKNOWN { color: #9aa1af; }
+    .hint { font-size: 11px; color: #6b7280; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <h1><span class="status-dot"></span> APDS — Current Page</h1>
+  <div class="row"><span>Verdict</span><span id="verdict" class="verdict UNKNOWN">—</span></div>
+  <div class="row"><span>Score</span><span id="score">—</span></div>
+  <div class="row"><span>Top signal</span><span id="signal">—</span></div>
+  <p class="hint">Scans run automatically in the background as you browse.</p>
+  <script src="popup.js"></script>
+</body>
+</html>
