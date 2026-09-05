@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "INFO"
     API_VERSION: str = "v1"
-    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "chrome-extension://dbfcpaoidbcbijoafhjkhamkcbiegabn"]
 
     # ─── Database ─────────────────────────────────────────────
     DATABASE_URL: str

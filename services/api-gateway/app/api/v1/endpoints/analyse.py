@@ -183,7 +183,7 @@ async def analyse(
     task_id = await persist_verdict(db, url_hash, verdict, final_score, scores, explainability)
 
     # ── Cache result (TTL 1h per doc) ─────────────────────────
-    await cache_set(cache_key, json.dumps({
+    verdict_payload = json.dumps({
         "task_id": task_id,
         "verdict": verdict,
         "final_score": final_score,
@@ -191,7 +191,11 @@ async def analyse(
         "explainability": explainability,
         "processing_ms": int((time.time() - start_time) * 1000),
         "cache_hit": False,
-    }), ttl=3600)
+    })
+    await cache_set(cache_key, verdict_payload, ttl=3600)
+
+    # ── Publish for WebSocket delivery (/ws/tasks/{task_id} polls this key) ──
+    await cache_set(f"APDS:WS:TASK:{task_id}", verdict_payload, ttl=60)
 
     logger.info("verdict issued", task_id=task_id, verdict=verdict, score=final_score)
     return AnalyseAccepted(

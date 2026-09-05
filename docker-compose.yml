@@ -171,56 +171,56 @@ services:
       timeout: 5s
       retries: 3
 
-  feedback-service:
-    build: ./services/feedback-service
-    restart: unless-stopped
-    env_file: .env
-    ports:
-      - "8007:8007"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
+  #feedback-service:
+  #  build: ./services/feedback-service
+  #  restart: unless-stopped
+  #  env_file: .env
+  #  ports:
+  #    - "8007:8007"
+  #  depends_on:
+  #    postgres:
+  #      condition: service_healthy
+  #  healthcheck:
+  #    test: ["CMD", "curl", "-f", "http://localhost:8007/health"]
+  #    interval: 15s
+  #    timeout: 5s
+  #    retries: 3
 
-  training-service:
-    build: ./services/training-service
-    restart: unless-stopped
-    env_file: .env
-    ports:
-      - "8008:8008"
-    volumes:
-      - model_store:/models
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
+  #xtraining-service:
+  #x  build: ./services/training-service
+  #x  restart: unless-stopped
+  #x  env_file: .env
+  #x  ports:
+  #x    - "8008:8008"
+  #x  volumes:
+  #x    - model_store:/models
+  #x  depends_on:
+  #x    postgres:
+  #x      condition: service_healthy
+  #x    redis:
+  #x      condition: service_healthy
+  #x  healthcheck:
+  #x    test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
+  #x    interval: 15s
+  #x    timeout: 5s
+  #x    retries: 3
 
-  dashboard-api:
-    build: ./services/dashboard-api
-    restart: unless-stopped
-    env_file: .env
-    ports:
-      - "8009:8009"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
+  #dashboard-api:
+  #  build: ./services/dashboard-api
+  #  restart: unless-stopped
+  #  env_file: .env
+  #  ports:
+  #    - "8009:8009"
+  #  depends_on:
+  #    postgres:
+  #      condition: service_healthy
+  #    redis:
+  #      condition: service_healthy
+  #  healthcheck:
+  #    test: ["CMD", "curl", "-f", "http://localhost:8009/health"]
+  #    interval: 15s
+  #    timeout: 5s
+  #    retries: 3
 
   # Celery Workers
   celery-worker-high:
