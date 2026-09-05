@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     ADVERSARIAL_SERVICE_URL: str
     FUSION_SERVICE_URL: str
     INTEL_SERVICE_URL: str
+    # doc 6.4: refresh threat feeds every 15 min. Kept as a config value
+    # (not hardcoded in celery_app.py) so it matches intel-service's own
+    # FEED_REFRESH_INTERVAL_MINUTES without editing two files if it changes.
+    INTEL_FEED_REFRESH_SECONDS: int = 900
     FEEDBACK_SERVICE_URL: str
     TRAINING_SERVICE_URL: str
     DASHBOARD_API_URL: str

@@ -6,6 +6,7 @@ import structlog
 from app.core.config import settings
 from app.core.redis import init_redis
 from app.api.lookup import router as lookup_router
+from app.api.ingest import router as ingest_router
 
 logger = structlog.get_logger()
 
@@ -30,6 +31,7 @@ app = FastAPI(
 Instrumentator().instrument(app).expose(app)
 
 app.include_router(lookup_router)
+app.include_router(ingest_router)
 
 
 @app.get("/health")
