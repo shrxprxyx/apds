@@ -23,7 +23,7 @@ class AnalyseRequest(BaseModel):
     url: str
     html_snapshot: Optional[str] = None
     screenshot_b64: Optional[str] = None
-    context: str = "browser"                    # browser | email | network
+    context: str = "browser"                    
 
 
 class AnalyseAccepted(BaseModel):
@@ -158,7 +158,7 @@ async def analyse(
         "adversarial": adversarial_result["score"],
     }
 
-    # ── Fusion (weighted Bayesian ensemble) ───────────────────
+    # ── Fusion ───────────────────
     async with httpx.AsyncClient() as client:
         fusion_result = await call_service(
             client,
@@ -182,7 +182,7 @@ async def analyse(
     # ── Persist to verdicts table ──────────────────────────────
     task_id = await persist_verdict(db, url_hash, verdict, final_score, scores, explainability)
 
-    # ── Cache result (TTL 1h per doc) ─────────────────────────
+    # ── Cache result ─────────────────────────
     verdict_payload = json.dumps({
         "task_id": task_id,
         "verdict": verdict,
@@ -194,7 +194,7 @@ async def analyse(
     })
     await cache_set(cache_key, verdict_payload, ttl=3600)
 
-    # ── Publish for WebSocket delivery (/ws/tasks/{task_id} polls this key) ──
+    # ── Publish for WebSocket delivery ──
     await cache_set(f"APDS:WS:TASK:{task_id}", verdict_payload, ttl=60)
 
     logger.info("verdict issued", task_id=task_id, verdict=verdict, score=final_score)
